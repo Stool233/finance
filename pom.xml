@@ -12,10 +12,22 @@
         <module>user-service</module>
         <module>account-service</module>
         <module>common</module>
+        <module>async-server</module>
+        <module>session-manager</module>
     </modules>
     <packaging>pom</packaging>
 
     <dependencies>
+
+        <!-- https://mvnrepository.com/artifact/junit/junit -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+
+
         <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
         <dependency>
             <groupId>mysql</groupId>
@@ -51,11 +63,6 @@
             <optional>true</optional>
         </dependency>
 
-        <dependency>
-            <groupId>org.stool</groupId>
-            <artifactId>myserver</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
     <build>

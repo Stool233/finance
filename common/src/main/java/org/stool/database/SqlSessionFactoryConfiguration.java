@@ -12,24 +12,17 @@ import javax.sql.DataSource;
 
 public class SqlSessionFactoryConfiguration {
 
-
-    private static class SqlSessionFactoryHide {
-        static SqlSessionFactory sqlSessionFactory;
-
-        static {
-            DataSource dataSource = new PooledDataSource("com.mysql.jdbc.Driver",
-                    "jdbc:mysql://localhost:3306/db",
-                    "root",
-                    "123456");
-            Environment environment = new Environment("development", new JdbcTransactionFactory(), dataSource);
-            Configuration configuration = new Configuration(environment);
-            configuration.addMapper(BlogMapper.class);
-            sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
+    public static SqlSessionFactory sqlSessionFactory(Class<?> ... classes) {
+        DataSource dataSource = new PooledDataSource("com.mysql.jdbc.Driver",
+                "jdbc:mysql://rm-wz9twin0w997453c0no.mysql.rds.aliyuncs.com:3306/finance",
+                "root",
+                "shishen1=1=2");
+        Environment environment = new Environment("development", new JdbcTransactionFactory(), dataSource);
+        Configuration configuration = new Configuration(environment);
+        for (Class<?> clazz : classes) {
+            configuration.addMapper(clazz);
         }
-    }
-
-    public static SqlSessionFactory sqlSessionFactory() {
-        return SqlSessionFactoryHide.sqlSessionFactory;
+        return new SqlSessionFactoryBuilder().build(configuration);
     }
 
 }
