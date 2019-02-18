@@ -11,7 +11,7 @@ public class SessionHandler implements Handler<RoutingContext> {
 
     private static final long DEFAULT_SESSION_TIMEOUT = 30 * 60 * 1000;
 
-    private static final boolean DEFAULT_COOKIE_HTTP_ONLY_FLAG = true;
+    private static final boolean DEFAULT_COOKIE_HTTP_ONLY_FLAG = false;
 
     private static final String DEFAULT_SESSION_COOKIE_PATH = "/";
 
@@ -28,6 +28,9 @@ public class SessionHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext context) {
+
+        context.sessionStore(sessionStore);
+
         Cookie sessionCookie = null;
         if ((sessionCookie = context.cookies().get(SESSION_NAME)) != null) {
             String sessionId = sessionCookie.value();
@@ -35,16 +38,31 @@ public class SessionHandler implements Handler<RoutingContext> {
             if ((session = sessionStore.get(sessionId)) != null) {
                 context.session(session);
             }
+            context.cookies().remove(SESSION_NAME);
         }
 
         context.addHeadersEndHandler(v -> {
-            sessionStore.put(context.session().id(), context.session());
 
-            Cookie cookie = new DefaultCookie(SESSION_NAME, context.session().id());
-            cookie.setHttpOnly(DEFAULT_COOKIE_HTTP_ONLY_FLAG);
-            cookie.setMaxAge(DEFAULT_SESSION_TIMEOUT);
-            cookie.setPath(DEFAULT_SESSION_COOKIE_PATH);
-            context.cookies().put(SESSION_NAME, cookie);
+            if (context.getSession() != null && !context.sessionRemoved()) {
+                sessionStore.put(context.session().id(), context.session());
+            }
+
+            if (context.sessionRemoved()) {
+                Cookie cookie = new DefaultCookie(SESSION_NAME, context.session().id());
+                cookie.setHttpOnly(DEFAULT_COOKIE_HTTP_ONLY_FLAG);
+                cookie.setMaxAge(0);
+                cookie.setPath(DEFAULT_SESSION_COOKIE_PATH);
+                context.cookies().put(SESSION_NAME, cookie);
+            }
+
+            if (context.sessionAdded()) {
+                Cookie cookie = new DefaultCookie(SESSION_NAME, context.session().id());
+                cookie.setHttpOnly(DEFAULT_COOKIE_HTTP_ONLY_FLAG);
+                cookie.setMaxAge(DEFAULT_SESSION_TIMEOUT);
+                cookie.setPath(DEFAULT_SESSION_COOKIE_PATH);
+                context.cookies().put(SESSION_NAME, cookie);
+            }
+
         });
     }
 }

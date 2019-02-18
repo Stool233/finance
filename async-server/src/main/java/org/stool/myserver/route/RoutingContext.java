@@ -7,6 +7,7 @@ import org.stool.myserver.core.Handler;
 import org.stool.myserver.core.http.HttpServerRequest;
 import org.stool.myserver.core.http.HttpServerResponse;
 import org.stool.myserver.session.Session;
+import org.stool.myserver.session.SessionStore;
 
 import java.util.Map;
 
@@ -30,7 +31,17 @@ public interface RoutingContext {
 
     Session session();
 
+    Session getSession();
+
     void session(Session session);
 
+    boolean sessionAdded();
+
     void matched();
+
+    void sessionStore(SessionStore sessionStore);
+
+    void removeSession();
+
+    boolean sessionRemoved();
 }

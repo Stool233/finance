@@ -5,4 +5,6 @@ public interface SessionStore {
     void put(String sessionId, Session session);
 
     Session get(String sessionId);
+
+    void remove(Session session);
 }

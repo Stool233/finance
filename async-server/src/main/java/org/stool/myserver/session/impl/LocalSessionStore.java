@@ -23,4 +23,11 @@ public class LocalSessionStore implements SessionStore {
     public Session get(String sessionId) {
         return sessionMap.get(sessionId);
     }
+
+    @Override
+    public void remove(Session session) {
+        if (session != null) {
+            sessionMap.remove(session.id());
+        }
+    }
 }

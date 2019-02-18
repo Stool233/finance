@@ -11,6 +11,7 @@ import org.stool.myserver.route.Route;
 import org.stool.myserver.route.RouteHandler;
 import org.stool.myserver.route.RoutingContext;
 import org.stool.myserver.session.Session;
+import org.stool.myserver.session.SessionStore;
 import org.stool.myserver.session.impl.SessionImpl;
 
 import java.util.*;
@@ -30,6 +31,10 @@ public class RoutingContextImpl implements RoutingContext {
 
     private Session session;
     private boolean matched;
+
+    private SessionStore sessionStore;
+    private boolean sessionRemoved;
+    private boolean sessionAdded;
 
 
     public RoutingContextImpl(HttpServerRequest request, RouteHandler routeHandler, List<Route> routes) {
@@ -97,7 +102,13 @@ public class RoutingContextImpl implements RoutingContext {
     public Session session() {
         if (session == null) {
             session = new SessionImpl();
+            sessionAdded = true;
         }
+        return session;
+    }
+
+    @Override
+    public Session getSession() {
         return session;
     }
 
@@ -107,9 +118,33 @@ public class RoutingContextImpl implements RoutingContext {
     }
 
     @Override
+    public boolean sessionAdded() {
+        return sessionAdded;
+    }
+
+    @Override
     public void matched() {
         this.matched = true;
     }
+
+    @Override
+    public void sessionStore(SessionStore sessionStore) {
+        this.sessionStore = sessionStore;
+    }
+
+    @Override
+    public void removeSession() {
+        if (session != null) {
+            sessionStore.remove(session);
+            sessionRemoved = true;
+        }
+    }
+
+    @Override
+    public boolean sessionRemoved() {
+        return sessionRemoved;
+    }
+
 
     private List<Handler<Void>> getHeadersEndHandlers() {
         if (headersEndHandlers == null) {

@@ -14,6 +14,7 @@ import org.stool.myserver.core.http.HttpMethod;
 import org.stool.myserver.core.net.Buffer;
 import org.stool.myserver.route.RoutingContext;
 import org.stool.myserver.session.Session;
+import org.stool.myserver.session.impl.SessionImpl;
 
 import java.nio.charset.Charset;
 import java.util.Date;
@@ -30,6 +31,11 @@ public class AccountController {
     }
 
     public void findAccountByName(RoutingContext routingContext) {
+
+        if (routingContext.getSession() == null) {
+            routingContext.response().setStatusCode(404).end();
+            return ;
+        }
 
         String username = routingContext.session().get("username");
         if (routingContext.session().get("username") == null) {

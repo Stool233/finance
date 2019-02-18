@@ -61,7 +61,7 @@ public class UserController {
     }
 
     public void logout(RoutingContext routingContext) {
-        routingContext.session().remove("username");
+        routingContext.removeSession();
         routingContext.response().end("success");
     }
 

@@ -74,7 +74,6 @@ public class ProxyHandler implements Handler<RoutingContext>{
                         });
                     }
                 });
-        setHeaders(httpServerRequest.headers(), httpClientRequest.headers());
         httpServerRequest.handler(data -> {
             httpClientRequest.write(data);
         });
