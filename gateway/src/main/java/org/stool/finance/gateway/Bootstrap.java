@@ -14,10 +14,12 @@ import java.net.URL;
 public class Bootstrap {
 
     public static void main(String[] args) {
+        if (args.length == 0) {
+            System.out.println("please set static dir");
+            return ;
+        }
 
-        ClassLoader classLoader = Bootstrap.class.getClassLoader();
-        File file = new File(classLoader.getResource("static").getFile());
-        String dir = file.getAbsolutePath() + "/";
+        String dir = args[0];
 
         EntryPoint entryPoint = EntryPoint.entryPoint();
         HttpServer httpServer = entryPoint.createHttpServer();

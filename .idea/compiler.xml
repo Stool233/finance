@@ -10,7 +10,6 @@
         <module name="async-server" />
         <module name="common" />
         <module name="gateway" />
-        <module name="session-manager" />
         <module name="user-service" />
       </profile>
     </annotationProcessing>

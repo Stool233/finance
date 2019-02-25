@@ -13,7 +13,6 @@
         <module>account-service</module>
         <module>common</module>
         <module>async-server</module>
-        <module>session-manager</module>
     </modules>
     <packaging>pom</packaging>
 
