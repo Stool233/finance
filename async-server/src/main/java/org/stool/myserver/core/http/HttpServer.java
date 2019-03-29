@@ -1,11 +1,10 @@
 package org.stool.myserver.core.http;
 
-import org.stool.myserver.core.Server;
 import org.stool.myserver.core.AsyncResult;
 import org.stool.myserver.core.EntryPoint;
 import org.stool.myserver.core.Handler;
 
-public interface HttpServer extends Server{
+public interface HttpServer{
 
     //-----------工厂方法 start---------------
 

@@ -6,7 +6,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.stool.myserver.core.*;
 import org.stool.myserver.core.Future;
-import org.stool.myserver.core.file.FileSystemOptions;
 import org.stool.myserver.core.file.impl.FileResolver;
 import org.stool.myserver.core.http.HttpClient;
 import org.stool.myserver.core.http.HttpServer;
@@ -41,7 +40,7 @@ public class EntryPointImpl implements EntryPoint {
         ioworkerEventLoopGroup = eventLoopGroup(8, threadFactory, 50);
         workerPool = Executors.newFixedThreadPool(20, threadFactory);
 
-        fileResolver = new FileResolver(new FileSystemOptions());
+        fileResolver = new FileResolver();
     }
 
     private EventLoopGroup eventLoopGroup(int nThreads, ThreadFactory threadFactory, int ioRatio) {

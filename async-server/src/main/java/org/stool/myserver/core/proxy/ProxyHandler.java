@@ -35,7 +35,7 @@ public class ProxyHandler implements Handler<RoutingContext>{
 
     @Override
     public void handle(RoutingContext routingContext) {
-        SocketAddress socketAddress =  nextServer();
+        SocketAddress socketAddress = nextServer();
         if (socketAddress == null) {
             return ;
         }

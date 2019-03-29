@@ -8,15 +8,15 @@ import org.stool.myserver.route.RouteHandler;
 public class StaticMain {
 
     public static void main(String[] args) {
-        String dir = "C:/Users/Administrator/Downloads/myserver/src/main/resources/";
+        String dir = "/html";
 
         EntryPoint entryPoint = EntryPoint.entryPoint();
-        HttpServer httpServer = entryPoint.createHttpServer();
 
         RouteHandler routeHandler = RouteHandler.create(entryPoint);
-
         routeHandler.route("/static/*").handler(StaticHandler.create(dir));
 
-        httpServer.requestHandler(routeHandler).listen(8080);
+        entryPoint.createHttpServer()
+                .requestHandler(routeHandler)
+                .listen(8080);
     }
 }

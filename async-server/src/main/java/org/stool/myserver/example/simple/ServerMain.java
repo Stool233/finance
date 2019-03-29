@@ -48,7 +48,7 @@ public class ServerMain {
 
         }).listen(8082);
 
-        server.start();
+
 
     }
 

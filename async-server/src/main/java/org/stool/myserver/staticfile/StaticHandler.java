@@ -3,6 +3,8 @@ package org.stool.myserver.staticfile;
 import org.stool.myserver.core.Handler;
 import org.stool.myserver.route.RoutingContext;
 
+import java.io.FileNotFoundException;
+
 public class StaticHandler implements Handler<RoutingContext>{
 
     private final String dir;
@@ -26,17 +28,19 @@ public class StaticHandler implements Handler<RoutingContext>{
             int index = routingContext.currentRoute().path().length();
             fileName = routingContext.request().path().substring(index, routingContext.request().path().length());
         }
-        String localPath = dir + fileName;
 
+        String localPath;
+        if (dir != null) {
+            localPath = dir + "/" + fileName;
+        } else {
+            localPath = fileName;
+        }
 
-        routingContext.context().executeBlocking(event -> {
-            routingContext.response().sendFile(localPath);
-        },  ar -> {
-            if (ar.failed()) {
-                routingContext.response().setStatusCode(404).end();
+        routingContext.response().sendFile(localPath, ar -> {
+            if (ar.failed() && ar.cause() instanceof FileNotFoundException) {
+                routingContext.response().setStatusCode(404).end("file not found");
             }
         });
-
 
     }
 }

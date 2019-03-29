@@ -6,15 +6,10 @@ import io.netty.handler.codec.http.HttpHeaderValues;
 import org.stool.finance.account.domain.Account;
 import org.stool.finance.account.service.AccountService;
 import org.stool.finance.user.domain.User;
-import org.stool.finance.user.service.UserService;
 import org.stool.myserver.core.Future;
 import org.stool.myserver.core.http.HttpClient;
-import org.stool.myserver.core.http.HttpClientResponse;
-import org.stool.myserver.core.http.HttpMethod;
 import org.stool.myserver.core.net.Buffer;
 import org.stool.myserver.route.RoutingContext;
-import org.stool.myserver.session.Session;
-import org.stool.myserver.session.impl.SessionImpl;
 
 import java.nio.charset.Charset;
 import java.util.Date;
@@ -34,13 +29,13 @@ public class AccountController {
 
         if (routingContext.getSession() == null) {
             routingContext.response().setStatusCode(404).end();
-            return ;
+            return;
         }
 
         String username = routingContext.session().get("username");
         if (routingContext.session().get("username") == null) {
             routingContext.response().setStatusCode(404).end();
-            return ;
+            return;
         }
 
         routingContext.context().<Account>executeBlocking(future -> {
@@ -79,12 +74,28 @@ public class AccountController {
                 .contentEqualsIgnoreCase(routingContext.request().headers().get(HttpHeaderNames.CONTENT_TYPE))) {
             routingContext.response().setStatusCode(400);
             routingContext.response().end("Bad Request");
-            return ;
+            return;
         }
 
-        Buffer totalBuffer = Buffer.buffer();
-        routingContext.request().handler(totalBuffer::appendBuffer);
-        routingContext.request().endHandler(v -> {
+        routingContext.request().bodyHandler(totalBuffer -> {
+
+            convertAccount(totalBuffer, routingContext)
+                .next(account -> saveAccount(account, routingContext))
+                .setHandler(ar -> {
+                    if (ar.succeeded()) {
+                        routingContext.response().end(ar.result());
+                    } else {
+                        routingContext.response().setStatusCode(400).end();
+                    }
+                });
+
+        });
+
+    }
+
+    private Future<Account> convertAccount(Buffer totalBuffer, RoutingContext routingContext) {
+        Future<Account> future = Future.future();
+        routingContext.context().executeAsync(v -> {
             String json = totalBuffer.getByteBuf().toString(Charset.forName("utf-8"));
             Account account = JSON.parseObject(json, Account.class);
 
@@ -92,17 +103,22 @@ public class AccountController {
             account.setName(username);
             account.setLastSeen(new Date());
 
-            routingContext.context().<String>executeBlocking(future -> {
-                accountService.saveAccount(future, account);
-            }, asyncResult -> {
-                if (asyncResult.succeeded()) {
-                    routingContext.response().end(asyncResult.result());
-                } else {
-                    routingContext.response().setStatusCode(400).end();
-                }
-            });
-
+            future.complete(account);
         });
+        return future;
+    }
 
+    private Future<String> saveAccount(Account account, RoutingContext routingContext) {
+        Future<String> finalFuture = Future.future();
+        routingContext.context().<String>executeBlocking(future -> {
+            accountService.saveAccount(future, account);
+        }, asyncResult -> {
+            if (asyncResult.succeeded()) {
+                finalFuture.complete(asyncResult.result());
+            } else {
+                finalFuture.fail(asyncResult.cause());
+            }
+        });
+        return finalFuture;
     }
 }

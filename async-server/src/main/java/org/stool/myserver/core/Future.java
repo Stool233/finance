@@ -117,7 +117,7 @@ public interface Future<T> extends AsyncResult<T>, Handler<AsyncResult<T>> {
      * @param <U>
      * @return
      */
-    default <U> Future<U> compose(Function<T, Future<U>> mapper) {
+    default <U> Future<U> next(Function<T, Future<U>> mapper) {
         if (mapper == null) {
             throw new NullPointerException();
         }

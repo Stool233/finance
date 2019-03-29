@@ -40,7 +40,7 @@ public class RouteHandlerImpl implements RouteHandler {
 
     @Override
     public void handle(HttpServerRequest request) {
-        new RoutingContextImpl(request, this, routes).next();
+        new RoutingContextImpl(request, this, routes).start();
     }
 
     @Override

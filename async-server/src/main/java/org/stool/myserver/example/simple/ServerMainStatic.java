@@ -45,7 +45,7 @@ public class ServerMainStatic {
 
         }).listen(8081);
 
-        server.start();
+
 
     }
 

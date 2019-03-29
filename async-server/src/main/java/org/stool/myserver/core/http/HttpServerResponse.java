@@ -73,8 +73,16 @@ public interface HttpServerResponse {
         return sendFile(filename, 0);
     }
 
+    default HttpServerResponse sendFile(String filename, Handler<AsyncResult<Void>> resultHandler) {
+        return sendFile(filename, 0);
+    }
+
     default HttpServerResponse sendFile(String filename, long offset) {
         return sendFile(filename, offset, Long.MAX_VALUE);
+    }
+
+    default HttpServerResponse sendFile(String filename, long offset, Handler<AsyncResult<Void>> resultHandler) {
+        return sendFile(filename, offset, Long.MAX_VALUE, resultHandler);
     }
 
 }

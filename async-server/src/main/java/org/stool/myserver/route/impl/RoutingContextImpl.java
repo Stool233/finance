@@ -57,7 +57,7 @@ public class RoutingContextImpl implements RoutingContext {
     }
 
     @Override
-    public void next() {
+    public void start() {
         while (iterator.hasNext()) {
             Route route = iterator.next();
             currentRoute = route;
@@ -68,7 +68,7 @@ public class RoutingContextImpl implements RoutingContext {
         if (!matched) {
             response()
                     .setStatusCode(404)
-                    .putHeader(HttpHeaderNames.CONTENT_TYPE.toString(), HttpHeaderValues.TEXT_PLAIN.toString())
+                    .putHeader("content-type", "text/plain")
                     .end("Resource Not Found");
         }
     }

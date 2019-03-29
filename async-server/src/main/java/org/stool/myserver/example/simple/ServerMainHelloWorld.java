@@ -4,6 +4,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.stool.myserver.core.EntryPoint;
 import org.stool.myserver.core.http.HttpServer;
 import org.stool.myserver.core.net.Buffer;
 
@@ -20,17 +21,12 @@ public class ServerMainHelloWorld {
 
     private static void startServer() {
 
-        HttpServer server = HttpServer.server();
+        EntryPoint.entryPoint()
+                .createHttpServer()
+                .requestHandler(request -> {
+                    request.response().end("Hello World!");
+                }).listen(8081);
 
-
-        server.requestHandler(request -> {
-
-            request.response().end("Hello World!");
-            
-
-        }).listen(8081);
-
-        server.start();
 
     }
 

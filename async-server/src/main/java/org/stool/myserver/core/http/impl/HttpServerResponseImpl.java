@@ -471,7 +471,7 @@ public class HttpServerResponseImpl implements HttpServerResponse {
                     });
                 }
 
-                // allow to write next response
+                // allow to write start response
                 conn.responseComplete();
             });
         }

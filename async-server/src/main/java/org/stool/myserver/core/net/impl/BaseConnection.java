@@ -226,7 +226,7 @@ public abstract class BaseConnection {
     }
 
     private void sendFileRegion(RandomAccessFile file, long offset, long length, ChannelPromise writeFuture) {
-        if (length <MAX_REGION_SIZE) {
+        if (length < MAX_REGION_SIZE) {
             writeToChannel(new DefaultFileRegion(file.getChannel(), offset, length), writeFuture);
         } else {
             ChannelPromise promise = chctx.newPromise();

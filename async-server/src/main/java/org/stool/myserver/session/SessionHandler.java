@@ -47,13 +47,6 @@ public class SessionHandler implements Handler<RoutingContext> {
                 sessionStore.put(context.session().id(), context.session());
             }
 
-            if (context.sessionRemoved()) {
-                Cookie cookie = new DefaultCookie(SESSION_NAME, context.session().id());
-                cookie.setHttpOnly(DEFAULT_COOKIE_HTTP_ONLY_FLAG);
-                cookie.setMaxAge(0);
-                cookie.setPath(DEFAULT_SESSION_COOKIE_PATH);
-                context.cookies().put(SESSION_NAME, cookie);
-            }
 
             if (context.sessionAdded()) {
                 Cookie cookie = new DefaultCookie(SESSION_NAME, context.session().id());

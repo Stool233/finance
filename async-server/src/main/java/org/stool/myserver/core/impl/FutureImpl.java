@@ -60,7 +60,7 @@ public class FutureImpl<T> implements Future<T> {
     public boolean tryComplete(T result) {
         Handler<AsyncResult<T>> h;
         synchronized (this) {
-            if (succeeded || failed) {
+            if (isComplete()) {
                 return false;
             }
             this.result = result;
@@ -78,7 +78,7 @@ public class FutureImpl<T> implements Future<T> {
     public boolean tryFail(Throwable cause) {
         Handler<AsyncResult<T>> h;
         synchronized (this) {
-            if (succeeded || failed) {
+            if (isComplete()) {
                 return false;
             }
             this.throwable = cause != null ? cause : new Exception();

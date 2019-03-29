@@ -14,12 +14,13 @@ import java.net.URL;
 public class Bootstrap {
 
     public static void main(String[] args) {
-        if (args.length == 0) {
-            System.out.println("please set static dir");
-            return ;
-        }
-
-        String dir = args[0];
+//        if (args.length == 0) {
+//            System.out.println("please set static dir");
+//            return ;
+//        }
+//
+//        String dir = args[0];
+        String dir = "C:/Users/Administrator/Downloads/finance/gateway/src/main/resources/static/";
 
         EntryPoint entryPoint = EntryPoint.entryPoint();
         HttpServer httpServer = entryPoint.createHttpServer();
@@ -32,7 +33,12 @@ public class Bootstrap {
         routeHandler.route("/user/*").handler(accountProxyHandler);
         routeHandler.route("/account/*").handler(accountProxyHandler);
 
-        httpServer.requestHandler(routeHandler).listen(8080);
+        ProxyHandler tomcatProxyHandler = ProxyHandler.create(entryPoint)
+                .addRemoteServer("127.0.0.1", 8080)
+                .addRemoteServer("127.0.0.1", 8090);
+        routeHandler.route("/docs/*").handler(tomcatProxyHandler);
+
+        httpServer.requestHandler(routeHandler).listen(8082);
     }
 
 }

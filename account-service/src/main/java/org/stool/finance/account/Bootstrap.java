@@ -23,7 +23,6 @@ public class Bootstrap {
     public static void main(String[] args) {
 
         EntryPoint entryPoint = EntryPoint.entryPoint();
-        HttpServer httpServer = entryPoint.createHttpServer();
         HttpClient httpClient = entryPoint.createHttpClient();
 
         SqlSessionFactory sqlSessionFactory = SqlSessionFactoryConfiguration.sqlSessionFactory(AccountMapper.class, UserMapper.class);
@@ -46,6 +45,8 @@ public class Bootstrap {
         routeHandler.route(HttpMethod.POST, "/account/").handler(accountController::createAccountByUser);
         routeHandler.route(HttpMethod.PUT, "/account/").handler(accountController::saveAccount);
 
-        httpServer.requestHandler(routeHandler).listen(8081);
+        entryPoint.createHttpServer()
+                .requestHandler(routeHandler)
+                .listen(8081);
     }
 }

@@ -5,6 +5,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
@@ -32,11 +33,10 @@ public class HttpServerImpl implements HttpServer {
     private final Map<Channel, BaseConnection> connectionMap = new ConcurrentHashMap<>();
     private final MyEventLoopGroup availableWorkers = new MyEventLoopGroup();
     private final HandlerManager<HttpHandlers> httpHandlerMgr = new HandlerManager<>(availableWorkers);
-    private final HttpStreamHandler<HttpServerRequest> requestStream = new HttpStreamHandler<>();
+    private Handler<HttpServerRequest> requestHandler;
 
     private Handler<HttpConnection> connectionHandler;
 
-    private ChannelGroup serverChannelGroup;
     private Context listenContext;
     private volatile boolean listening;
 
@@ -52,13 +52,13 @@ public class HttpServerImpl implements HttpServer {
 
     @Override
     public HttpServer requestHandler(Handler<HttpServerRequest> handler) {
-        requestStream.handler(handler);
+        this.requestHandler = handler;
         return this;
     }
 
     @Override
     public Handler<HttpServerRequest> requestHandler() {
-        return requestStream.handler;
+        return requestHandler;
     }
 
     @Override
@@ -82,7 +82,6 @@ public class HttpServerImpl implements HttpServer {
 
     @Override
     public HttpServer listen(int port) {
-        serverChannelGroup = new DefaultChannelGroup("my-accptor-channels", GlobalEventExecutor.INSTANCE);
         listenContext = entryPoint.getOrCreateContext();
 
         bootstrap = new ServerBootstrap();
@@ -96,22 +95,22 @@ public class HttpServerImpl implements HttpServer {
         });
 
         addHandlers(this, listenContext);
-        bindFuture = AsyncResolveConnectHelper.doBind(entryPoint, port, bootstrap);
-        bindFuture.addListener(res -> {
-            if (res.succeeded()) {
-                Channel serverChannel = res.result();
+
+        bootstrap.channelFactory(NioServerSocketChannel::new);
+        InetSocketAddress t = new InetSocketAddress(port);
+        final ChannelFuture bindFuture = bootstrap.bind(t);
+
+        bindFuture.addListener(f -> {
+            if (f.isSuccess()) {
+                Channel serverChannel = bindFuture.channel();
                 if (serverChannel.localAddress() instanceof InetSocketAddress) {
                     HttpServerImpl.this.actualPort = ((InetSocketAddress)serverChannel.localAddress()).getPort();
                 } else {
                     HttpServerImpl.this.actualPort = port;
                 }
-                serverChannelGroup.add(serverChannel);
-            }
-        });
-        bindFuture.addListener(future -> {
-            if (future.failed()) {
+            } else {
                 listening = false;
-                log.error(future.cause().getMessage());
+                log.error(f.cause().getMessage());
             }
         });
 
@@ -121,7 +120,7 @@ public class HttpServerImpl implements HttpServer {
     private void addHandlers(HttpServerImpl httpServer, Context listenContext) {
         httpServer.httpHandlerMgr.addHandler(
                 new HttpHandlers(
-                        requestStream.handler(),
+                        requestHandler,
                         connectionHandler,
                         DEFAULT_EXCEPTION_HANDLER
                 ),
@@ -150,10 +149,9 @@ public class HttpServerImpl implements HttpServer {
         pipeline.addLast("httpDecoder", new HttpRequestDecoder());
         pipeline.addLast("httpEncoder", new HttpResponseEncoder());
 
-        MyNettyHandler<HttpServerConnection> handler = MyNettyHandler.create(holder.context, chctx -> {
-            HttpServerConnection conn = new HttpServerConnection(entryPoint, chctx, holder.context, holder.handler);
-            return conn;
-        });
+        MyNettyHandler<HttpServerConnection> handler = MyNettyHandler.create(holder.context, chctx ->
+            new HttpServerConnection(entryPoint, chctx, holder.context, holder.handler)
+        );
         handler.addHandler(conn -> {
             connectionMap.put(pipeline.channel(), conn);
         });
@@ -193,94 +191,6 @@ public class HttpServerImpl implements HttpServer {
 
     @Override
     public void close(Handler<AsyncResult<Void>> completionHandler) {
-
-    }
-
-    @Override
-    public void init(EntryPoint entryPoint) {
-
-    }
-
-    @Override
-    public void start() {
-
-    }
-
-    @Override
-    public void stop() {
-
-    }
-
-    private class HttpStreamHandler<C extends HttpServerRequest> {
-
-        private Handler<C> handler;
-        private long demand = Long.MAX_VALUE;
-        private Handler<Void> endHandler;
-
-        Handler<C> handler() {
-            synchronized (HttpServerImpl.this) {
-                return handler;
-            }
-        }
-
-        boolean accept() {
-            synchronized (HttpServerImpl.this) {
-                boolean accept = demand > 0L;
-                if (accept && demand != Long.MAX_VALUE) {
-                    demand--;
-                }
-                return accept;
-            }
-        }
-
-        Handler<Void> endHandler() {
-            synchronized (HttpServerImpl.this) {
-                return endHandler;
-            }
-        }
-
-
-        public HttpStreamHandler handler(Handler<C> handler) {
-            synchronized (HttpServerImpl.this) {
-                if (listening) {
-                    throw new IllegalStateException("Please set handler before server is listening");
-                }
-                this.handler = handler;
-                return this;
-            }
-        }
-
-        public HttpStreamHandler pause() {
-            synchronized (HttpServerImpl.this) {
-                demand = 0L;
-                return this;
-            }
-        }
-
-        public HttpStreamHandler fetch(long amount) {
-            if (amount > 0L) {
-                demand += amount;
-                if (demand < 0L) {
-                    demand = Long.MAX_VALUE;
-                }
-            }
-            return this;
-        }
-
-        public HttpStreamHandler resume() {
-            synchronized (HttpServerImpl.this) {
-                demand = Long.MAX_VALUE;
-                return this;
-            }
-        }
-
-        public HttpStreamHandler endHandler(Handler<Void> endHandler) {
-            synchronized (HttpServerImpl.this) {
-                this.endHandler = endHandler;
-                return this;
-            }
-        }
-
 
     }
 

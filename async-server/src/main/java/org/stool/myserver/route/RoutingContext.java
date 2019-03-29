@@ -17,7 +17,7 @@ public interface RoutingContext {
 
     HttpServerResponse response();
 
-    void next();
+    void start();
 
     Route currentRoute();
 
