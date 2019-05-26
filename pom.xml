@@ -13,6 +13,7 @@
         <module>account-service</module>
         <module>common</module>
         <module>async-server</module>
+        <module>demo</module>
     </modules>
     <packaging>pom</packaging>
 

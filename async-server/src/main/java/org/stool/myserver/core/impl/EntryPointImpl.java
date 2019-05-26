@@ -1,6 +1,5 @@
 package org.stool.myserver.core.impl;
 
-import io.netty.channel.DefaultEventLoopGroup;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -10,7 +9,6 @@ import org.stool.myserver.core.file.impl.FileResolver;
 import org.stool.myserver.core.http.HttpClient;
 import org.stool.myserver.core.http.HttpServer;
 import org.stool.myserver.core.http.impl.HttpClientImpl;
-import org.stool.myserver.core.http.impl.HttpClientOptions;
 import org.stool.myserver.core.http.impl.HttpServerImpl;
 
 import java.io.File;

@@ -31,18 +31,13 @@ public class HttpServerImpl implements HttpServer {
 
     private static final Handler<Throwable> DEFAULT_EXCEPTION_HANDLER = t -> log.trace("Connection failure", t);
     private final Map<Channel, BaseConnection> connectionMap = new ConcurrentHashMap<>();
-    private final MyEventLoopGroup availableWorkers = new MyEventLoopGroup();
-    private final HandlerManager<HttpHandlers> httpHandlerMgr = new HandlerManager<>(availableWorkers);
     private Handler<HttpServerRequest> requestHandler;
-
     private Handler<HttpConnection> connectionHandler;
 
-    private Context listenContext;
     private volatile boolean listening;
 
     private EntryPoint entryPoint;
     private ServerBootstrap bootstrap;
-    private AsyncResolveConnectHelper bindFuture;
     private int actualPort;
 
 
@@ -82,10 +77,9 @@ public class HttpServerImpl implements HttpServer {
 
     @Override
     public HttpServer listen(int port) {
-        listenContext = entryPoint.getOrCreateContext();
 
         bootstrap = new ServerBootstrap();
-        bootstrap.group(entryPoint.getAcceptorEventLoopGroup(), availableWorkers);
+        bootstrap.group(entryPoint.getAcceptorEventLoopGroup(), entryPoint.getIOWorkerEventLoopGroup());
 
         bootstrap.childHandler(new ChannelInitializer<Channel>() {
             @Override
@@ -93,8 +87,6 @@ public class HttpServerImpl implements HttpServer {
                 handleHttp(ch);
             }
         });
-
-        addHandlers(this, listenContext);
 
         bootstrap.channelFactory(NioServerSocketChannel::new);
         InetSocketAddress t = new InetSocketAddress(port);
@@ -117,40 +109,18 @@ public class HttpServerImpl implements HttpServer {
         return this;
     }
 
-    private void addHandlers(HttpServerImpl httpServer, Context listenContext) {
-        httpServer.httpHandlerMgr.addHandler(
-                new HttpHandlers(
-                        requestHandler,
-                        connectionHandler,
-                        DEFAULT_EXCEPTION_HANDLER
-                ),
-                listenContext
-        );
-    }
-
     private void handleHttp(Channel ch) {
-        HandlerHolder<HttpHandlers> holder = httpHandlerMgr.chooseHandler(ch.eventLoop());
-        if (holder == null) {
-            sendServiceUnavailable(ch);
-            return ;
-        }
-        configureHttp(ch.pipeline(), holder);
-    }
-
-    private void sendServiceUnavailable(Channel ch) {
-        ch.writeAndFlush(
-                Unpooled.copiedBuffer("HTTP/1.1 503 Service Unavailable\r\n" +
-                        "Content-Length:0\r\n" +
-                        "\r\n", StandardCharsets.ISO_8859_1))
-                .addListener(ChannelFutureListener.CLOSE);
-    }
-
-    private void configureHttp(ChannelPipeline pipeline, HandlerHolder<HttpHandlers> holder) {
+        ChannelPipeline pipeline = ch.pipeline();
         pipeline.addLast("httpDecoder", new HttpRequestDecoder());
         pipeline.addLast("httpEncoder", new HttpResponseEncoder());
 
-        MyNettyHandler<HttpServerConnection> handler = MyNettyHandler.create(holder.context, chctx ->
-            new HttpServerConnection(entryPoint, chctx, holder.context, holder.handler)
+        Context context = entryPoint.getOrCreateContext();
+        MyNettyHandler<HttpServerConnection> handler = MyNettyHandler.create(context, chctx ->
+                new HttpServerConnection(entryPoint, chctx, context, new HttpHandlers(
+                        requestHandler,
+                        connectionHandler,
+                        DEFAULT_EXCEPTION_HANDLER
+                ))
         );
         handler.addHandler(conn -> {
             connectionMap.put(pipeline.channel(), conn);
@@ -159,7 +129,6 @@ public class HttpServerImpl implements HttpServer {
             connectionMap.remove(pipeline.channel());
         });
         pipeline.addLast("handler", handler);
-
     }
 
     @Override

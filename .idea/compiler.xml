@@ -9,6 +9,7 @@
         <module name="account-service" />
         <module name="async-server" />
         <module name="common" />
+        <module name="demo" />
         <module name="gateway" />
         <module name="user-service" />
       </profile>
@@ -17,6 +18,7 @@
       <module name="account-service" target="1.8" />
       <module name="async-server" target="1.8" />
       <module name="common" target="1.8" />
+      <module name="demo" target="1.8" />
       <module name="finance" target="1.8" />
       <module name="gateway" target="1.8" />
       <module name="session-manager" target="1.8" />
